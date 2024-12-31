@@ -1,0 +1,42 @@
+stages:
+  - build
+  - deploy
+  - checklog
+
+build:
+  stage: build
+  script:
+    - echo "Building SpringBoot application..."
+    - docker-compose build
+  artifacts:
+    paths:
+      - target/*.jar
+  tags:
+    - lab-server
+  only:
+    - main
+
+deploy:
+  stage: deploy
+  before_script:
+    - echo "Setting up Docker network..."
+    - docker network create esim || true
+  script:
+    - echo "Deploying SpringBoot application..."
+    - docker-compose -f docker-compose.yml up -d
+  tags:
+    - lab-server
+  only:
+    - main
+
+checklog:
+  stage: checklog
+  script:
+    - echo "Waiting for services to be ready..."
+    - sleep 20
+    - echo "Checking logs for esim-service..."
+    - docker-compose logs --tail=50 esim-service  
+  tags:
+    - lab-server
+  only:
+    - main
